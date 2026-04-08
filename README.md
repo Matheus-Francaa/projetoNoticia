@@ -1,22 +1,80 @@
-# Welcome to your Expo app 👋
+# 📰 Portal de Notícias - React Native com Expo
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Uma aplicação React Native completa desenvolvida com Expo para gerenciamento e leitura de notícias com diferentes níveis de acesso de usuários.
 
-## Get started
+## 🚀 Funcionalidades
 
-1. Install dependencies
+### 👤 Público (Sem Login)
+- **Home - Lista de Notícias**: Visualizar todas as notícias publicadas
+- **Busca por Tag**: Filtrar notícias por tags
+- **Busca por UF**: Filtrar notícias por estado
+- **Detalhe da Notícia**: Ver conteúdo completo e comentários
+- **Cadastro**: Criar uma nova conta
+- **Login**: Acessar como diferentes perfis
+- **Recuperação de Acesso**: Recuperar acesso via email
 
-   ```bash
-   npm install
-   ```
+### ✍️ Autor
+- **Meu Perfil**: Editar informações pessoais
+- **Minhas Notícias**: Visualizar, editar e deletar notícias criadas
+- **Nova Notícia**: Criar e publicar novas notícias
+- **Comentar**: Participar da comunidade com comentários
 
-2. Start the app
+### 👁️ Leitor
+- **Meu Perfil**: Editar informações e preferências
+- **Ler Notícias**: Acessar todas as notícias publicadas
+- **Comentar**: Adicionar comentários nas notícias
 
-   ```bash
-   npx expo start
-   ```
+### 📋 Editor
+- **Meu Perfil**: Editar informações pessoais
+- **Painel de Publicação**: Gerenciar todas as notícias
 
-In the output, you'll find options to open the app in a
+### 👑 Super Admin
+- **Dashboard Completo**: CRUD de Cidades, Tags, Perfis, UF, Notícias, Usuários e Comentários
+
+## 📋 Pré-requisitos
+
+- Node.js 16 ou superior
+- npm
+- Expo Go (opcional, para celular)
+
+## 🛠️ Instalação
+
+```bash
+cd projetoNoticia
+npm install
+npm start
+```
+
+## 💻 Como Usar
+
+Pressione:
+- `w` para web
+- `a` para Android
+- `i` para iOS
+
+Na tela de Login, escolha um dos 3 perfis!
+
+## 📁 Estrutura
+
+```
+src/
+├── screens/         (Telas por perfil)
+├── navigation/      (Navegação)
+├── context/         (Autenticação)
+├── components/      (Componentes)
+└── utils/          (Dados mock)
+```
+
+## 🎨 Estilos
+
+- Ícones: Emojis
+- Cores: Azul (#2196F3), Laranja, Roxo
+
+## 📝 Notas
+
+- Dados mock (sem backend real)
+- Autenticação simulada
+- Para fins educacionais
 
 - [development build](https://docs.expo.dev/develop/development-builds/introduction/)
 - [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
