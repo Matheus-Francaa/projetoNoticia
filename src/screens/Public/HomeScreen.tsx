@@ -1,47 +1,48 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { Header } from '@/src/components/Header';
 import { NavigationAdapter } from '@/src/types';
-
-const mockNews = [
-    {
-        id: '1',
-        title: 'Nova tecnologia revoluciona o mercado',
-        subtitle: 'Inovação promete mudar a forma como trabalhamos',
-        author: 'João Silva',
-        date: '2024-01-15',
-        category: 'Tecnologia',
-    },
-    {
-        id: '2',
-        title: 'Esportes: Time nacional conquista título histórico',
-        subtitle: 'Uma vitória que entrará para a história',
-        author: 'Maria Santos',
-        date: '2024-01-14',
-        category: 'Esportes',
-    },
-    {
-        id: '3',
-        title: 'Economia em crescimento',
-        subtitle: 'Indicadores mostram recuperação sustentada',
-        author: 'Pedro Oliveira',
-        date: '2024-01-13',
-        category: 'Economia',
-    },
-];
+import { useNews, News } from '@/src/context/NewsContext';
+import { useReader } from '@/src/context/ReaderContext';
 
 interface Props {
     navigation: NavigationAdapter;
 }
 
 export function HomeScreen({ navigation }: Props) {
-    const renderNewsItem = ({ item }: { item: typeof mockNews[0] }) => (
+    const { getPublishedNews } = useNews();
+    const { addFavorite, removeFavorite, isFavorite } = useReader();
+    const [refreshing, setRefreshing] = useState(false);
+
+    const publishedNews = getPublishedNews();
+
+    const handleFavorite = (newsId: string) => {
+        if (isFavorite(newsId)) {
+            removeFavorite(newsId);
+        } else {
+            addFavorite(newsId);
+        }
+    };
+
+    const handleRefresh = () => {
+        setRefreshing(true);
+        setTimeout(() => setRefreshing(false), 500);
+    };
+
+    const renderNewsItem = ({ item }: { item: News }) => (
         <TouchableOpacity
             style={styles.newsCard}
             onPress={() => navigation.navigate('NewsDetail', { news: item })}
         >
-            <View style={styles.categoryBadge}>
-                <Text style={styles.categoryText}>{item.category}</Text>
+            <View style={styles.cardHeader}>
+                <View style={styles.categoryBadge}>
+                    <Text style={styles.categoryText}>{item.category}</Text>
+                </View>
+                <TouchableOpacity onPress={() => handleFavorite(item.id)}>
+                    <Text style={styles.favoriteIcon}>
+                        {isFavorite(item.id) ? '❤️' : '🤍'}
+                    </Text>
+                </TouchableOpacity>
             </View>
             <Text style={styles.newsTitle}>{item.title}</Text>
             <Text style={styles.newsSubtitle}>{item.subtitle}</Text>
@@ -63,11 +64,18 @@ export function HomeScreen({ navigation }: Props) {
                 }
             />
             <FlatList
-                data={mockNews}
+                data={publishedNews}
                 renderItem={renderNewsItem}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.listContent}
                 showsVerticalScrollIndicator={false}
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                ListEmptyComponent={
+                    <View style={styles.empty}>
+                        <Text style={styles.emptyText}>Nenhuma notícia publicada</Text>
+                    </View>
+                }
             />
         </View>
     );
@@ -81,29 +89,41 @@ const styles = StyleSheet.create({
     listContent: {
         padding: 16,
     },
+    empty: {
+        padding: 40,
+        alignItems: 'center',
+    },
+    emptyText: {
+        fontSize: 16,
+        color: '#666',
+    },
     newsCard: {
         backgroundColor: '#fff',
         borderRadius: 12,
         padding: 16,
         marginBottom: 16,
         elevation: 3,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    },
+    cardHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
     categoryBadge: {
         backgroundColor: '#2196F3',
         paddingHorizontal: 12,
         paddingVertical: 4,
         borderRadius: 12,
-        alignSelf: 'flex-start',
         marginBottom: 8,
     },
     categoryText: {
         color: '#fff',
         fontSize: 12,
         fontWeight: '600',
+    },
+    favoriteIcon: {
+        fontSize: 20,
     },
     newsTitle: {
         fontSize: 18,
