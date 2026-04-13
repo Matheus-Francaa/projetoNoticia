@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Switch } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { Header } from '@/src/components/Header';
 import { NavigationAdapter } from '@/src/types';
 import { useAuth } from '@/src/context/AuthContext';
@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function AdminUsersScreen({ navigation }: Props) {
-    const { user } = useAuth();
+    useAuth();
 
     return (
         <View style={styles.container}>

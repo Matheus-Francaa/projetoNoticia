@@ -128,7 +128,7 @@ export function EditorHomeScreen({ navigation }: Props) {
                         <View style={[styles.recentDot, { backgroundColor: '#4CAF50' }]} />
                         <View style={styles.recentContent}>
                             <Text style={styles.recentTitle}>
-                                "Economia em recuperação"
+                                &quot;Economia em recuperação&quot;
                             </Text>
                             <Text style={styles.recentTime}>Há 2 horas</Text>
                         </View>
@@ -140,7 +140,7 @@ export function EditorHomeScreen({ navigation }: Props) {
                         <View style={[styles.recentDot, { backgroundColor: '#FF9800' }]} />
                         <View style={styles.recentContent}>
                             <Text style={styles.recentTitle}>
-                                "Nova tecnologia"
+                                &quot;Nova tecnologia&quot;
                             </Text>
                             <Text style={styles.recentTime}>Há 5 horas</Text>
                         </View>

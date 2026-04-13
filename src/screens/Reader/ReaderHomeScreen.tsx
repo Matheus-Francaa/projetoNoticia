@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { Header } from '@/src/components/Header';
 import { NavigationAdapter } from '@/src/types';
 import { useAuth } from '@/src/context/AuthContext';
@@ -49,7 +49,10 @@ export function ReaderHomeScreen({ navigation }: Props) {
                         <Text style={styles.statNumber}>{publishedCount}</Text>
                         <Text style={styles.statLabel}>Notícias</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.statCard}>
+                    <TouchableOpacity 
+                        style={styles.statCard}
+                        onPress={() => navigation.navigate('Favorites')}
+                    >
                         <Text style={styles.statNumber}>{favoriteCount}</Text>
                         <Text style={styles.statLabel}>Favoritos</Text>
                     </TouchableOpacity>
@@ -69,7 +72,10 @@ export function ReaderHomeScreen({ navigation }: Props) {
                         <Text style={styles.actionSubtitle}>Explore o feed</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.actionCard}>
+                    <TouchableOpacity 
+                        style={styles.actionCard}
+                        onPress={() => navigation.navigate('Favorites')}
+                    >
                         <View style={[styles.actionIcon, { backgroundColor: '#FFEBEE' }]}>
                             <Text style={styles.actionEmoji}>❤️</Text>
                         </View>
@@ -77,20 +83,26 @@ export function ReaderHomeScreen({ navigation }: Props) {
                         <Text style={styles.actionSubtitle}>{favoriteCount} salvas</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.actionCard}>
+                    <TouchableOpacity 
+                        style={styles.actionCard}
+                        onPress={() => navigation.navigate('Settings')}
+                    >
                         <View style={[styles.actionIcon, { backgroundColor: '#E8F5E9' }]}>
-                            <Text style={styles.actionEmoji}>💬</Text>
+                            <Text style={styles.actionEmoji}>⚙️</Text>
                         </View>
-                        <Text style={styles.actionTitle}>Comentários</Text>
-                        <Text style={styles.actionSubtitle}>Suas opiniões</Text>
+                        <Text style={styles.actionTitle}>Configurações</Text>
+                        <Text style={styles.actionSubtitle}>Personalize</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.actionCard}>
-                        <View style={[styles.actionIcon, { backgroundColor: '#FFF3E0' }]}>
-                            <Text style={styles.actionEmoji}>🔖</Text>
+                    <TouchableOpacity 
+                        style={styles.actionCard}
+                        onPress={() => navigation.navigate('Profile')}
+                    >
+                        <View style={[styles.actionIcon, { backgroundColor: '#F3E5F5' }]}>
+                            <Text style={styles.actionEmoji}>👤</Text>
                         </View>
-                        <Text style={styles.actionTitle}>Categorias</Text>
-                        <Text style={styles.actionSubtitle}>Filtrar por tema</Text>
+                        <Text style={styles.actionTitle}>Meu Perfil</Text>
+                        <Text style={styles.actionSubtitle}>Ver informações</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -98,21 +110,27 @@ export function ReaderHomeScreen({ navigation }: Props) {
                 <Text style={styles.sectionTitle}>Em Alta</Text>
                 <View style={styles.trendingSection}>
                     <View style={styles.trendingItem}>
-                        <View style={styles.trendingRank}>1</View>
+                        <View style={styles.trendingRank}>
+                            <Text style={styles.trendingRankText}>1</Text>
+                        </View>
                         <View style={styles.trendingInfo}>
                             <Text style={styles.trendingTitle}>Tecnologia</Text>
                             <Text style={styles.trendingSubtitle}>12 notícias</Text>
                         </View>
                     </View>
                     <View style={styles.trendingItem}>
-                        <View style={styles.trendingRank}>2</View>
+                        <View style={styles.trendingRank}>
+                            <Text style={styles.trendingRankText}>2</Text>
+                        </View>
                         <View style={styles.trendingInfo}>
                             <Text style={styles.trendingTitle}>Esportes</Text>
                             <Text style={styles.trendingSubtitle}>8 notícias</Text>
                         </View>
                     </View>
                     <View style={styles.trendingItem}>
-                        <View style={styles.trendingRank}>3</View>
+                        <View style={styles.trendingRank}>
+                            <Text style={styles.trendingRankText}>3</Text>
+                        </View>
                         <View style={styles.trendingInfo}>
                             <Text style={styles.trendingTitle}>Economia</Text>
                             <Text style={styles.trendingSubtitle}>5 notícias</Text>
@@ -249,12 +267,13 @@ const styles = StyleSheet.create({
         height: 28,
         borderRadius: 14,
         backgroundColor: '#4CAF50',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    trendingRankText: {
         color: '#fff',
-        textAlign: 'center',
-        lineHeight: 28,
         fontSize: 14,
         fontWeight: 'bold',
-        overflow: 'hidden',
     },
     trendingInfo: {
         marginLeft: 12,

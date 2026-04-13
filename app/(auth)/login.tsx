@@ -6,13 +6,13 @@ import { ScrollView, StyleSheet, Text, View, KeyboardAvoidingView, Platform } fr
 
 type UserRole = 'author' | 'reader' | 'editor' | 'admin';
 
-const roles: Array<{
+const roles: {
     role: UserRole;
     icon: string;
     name: string;
     description: string;
     color: string;
-}> = [
+}[] = [
     {
         role: 'author',
         icon: '✏️',

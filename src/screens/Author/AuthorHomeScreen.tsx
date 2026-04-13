@@ -23,28 +23,28 @@ export function AuthorHomeScreen({ navigation }: Props) {
             title: 'Minhas Notícias',
             subtitle: `${myNews.length} total`,
             color: '#E3F2FD',
-            onPress: () => navigation.navigate('AuthorStack'),
+            onPress: () => navigation.navigate('MyNews'),
         },
         {
             icon: '✏️',
             title: 'Criar Notícia',
             subtitle: 'Escreva uma nova história',
             color: '#E8F5E9',
-            onPress: () => navigation.navigate('NewsDetail', {}),
+            onPress: () => navigation.navigate('NewNews'),
         },
         {
             icon: '⏳',
             title: 'Pendentes',
             subtitle: `${pendingCount} aguardando`,
             color: '#FFF3E0',
-            onPress: () => navigation.navigate('AuthorStack'),
+            onPress: () => navigation.navigate('MyNews'),
         },
         {
             icon: '👤',
             title: 'Meu Perfil',
             subtitle: 'Editar informações',
             color: '#F3E5F5',
-            onPress: () => navigation.replace('ReaderStack'),
+            onPress: () => navigation.navigate('Profile'),
         },
     ];
 

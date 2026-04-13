@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Switch, TextInput } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Switch } from 'react-native';
 import { Header } from '@/src/components/Header';
-import { CustomButton } from '@/src/components/CustomButton';
 import { NavigationAdapter } from '@/src/types';
 import { useAuth } from '@/src/context/AuthContext';
 import { useNews } from '@/src/context/NewsContext';
