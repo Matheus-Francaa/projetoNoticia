@@ -1,41 +1,93 @@
-import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Header } from '@/src/components/Header';
+import { CustomButton } from '@/src/components/CustomButton';
 import { NavigationAdapter } from '@/src/types';
-
-const mockMyNews = [
-    { id: '1', title: 'Minha primeira notícia', status: 'Publicada', date: '2024-01-15' },
-    { id: '2', title: 'Notícia em andamento', status: 'Rascunho', date: '2024-01-14' },
-];
+import { useNews, News } from '@/src/context/NewsContext';
+import { useAuth } from '@/src/context/AuthContext';
 
 interface Props {
     navigation: NavigationAdapter;
 }
 
 export function AuthorMyNewsScreen({ navigation }: Props) {
+    const { user } = useAuth();
+    const { getNewsByAuthor, deleteNews } = useNews();
+    const [refreshing, setRefreshing] = useState(false);
+
+    const myNews = user ? getNewsByAuthor(user.id) : [];
+
+    const handleDelete = (id: string) => {
+        Alert.alert(
+            'Excluir Notícia',
+            'Tem certeza que deseja excluir esta notícia?',
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Excluir',
+                    style: 'destructive',
+                    onPress: () => deleteNews(id),
+                },
+            ]
+        );
+    };
+
+    const handleRefresh = () => {
+        setRefreshing(true);
+        setTimeout(() => setRefreshing(false), 500);
+    };
+
+    const renderItem = ({ item }: { item: News }) => (
+        <TouchableOpacity
+            style={styles.newsCard}
+            onPress={() => navigation.navigate('NewsDetail', { news: item })}
+        >
+            <View style={styles.newsInfo}>
+                <Text style={styles.newsTitle}>{item.title}</Text>
+                <Text style={styles.newsDate}>{item.date}</Text>
+            </View>
+            <View style={styles.actions}>
+                <TouchableOpacity
+                    style={styles.editButton}
+                    onPress={() => navigation.navigate('NewsDetail', { news: item })}
+                >
+                    <Text style={styles.editText}>✏️</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => handleDelete(item.id)}
+                >
+                    <Text style={styles.deleteText}>🗑️</Text>
+                </TouchableOpacity>
+            </View>
+        </TouchableOpacity>
+    );
+
     return (
         <View style={styles.container}>
             <Header title="Minhas Notícias" showBackButton onBackPress={() => navigation.goBack()} />
-            <FlatList
-                data={mockMyNews}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.listContent}
-                renderItem={({ item }) => (
-                    <TouchableOpacity
-                        style={styles.newsCard}
-                        onPress={() => navigation.navigate('NewsDetail', { news: item })}
-                    >
-                        <View style={styles.newsInfo}>
-                            <Text style={styles.newsTitle}>{item.title}</Text>
-                            <Text style={styles.newsDate}>{item.date}</Text>
-                        </View>
-                        <View style={[styles.statusBadge, item.status === 'Publicada' ? styles.publishedBadge : styles.draftBadge]}>
-                            <Text style={styles.statusText}>{item.status}</Text>
-                        </View>
-                    </TouchableOpacity>
-                )}
-            />
-            <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('NewsDetail', {})}>
+            {myNews.length === 0 ? (
+                <View style={styles.empty}>
+                    <Text style={styles.emptyText}>Você ainda não tem notícias</Text>
+                    <CustomButton
+                        title="Criar Primeira Notícia"
+                        onPress={() => navigation.navigate('NewsDetail', {})}
+                    />
+                </View>
+            ) : (
+                <FlatList
+                    data={myNews}
+                    keyExtractor={(item) => item.id}
+                    contentContainerStyle={styles.listContent}
+                    renderItem={renderItem}
+                    refreshing={refreshing}
+                    onRefresh={handleRefresh}
+                />
+            )}
+            <TouchableOpacity
+                style={styles.fab}
+                onPress={() => navigation.navigate('NewsDetail', {})}
+            >
                 <Text style={styles.fabText}>+</Text>
             </TouchableOpacity>
         </View>
@@ -50,6 +102,17 @@ const styles = StyleSheet.create({
     listContent: {
         padding: 16,
     },
+    empty: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    emptyText: {
+        fontSize: 16,
+        color: '#666',
+        marginBottom: 16,
+    },
     newsCard: {
         backgroundColor: '#fff',
         padding: 16,
@@ -58,6 +121,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        elevation: 2,
     },
     newsInfo: {
         flex: 1,
@@ -72,21 +136,21 @@ const styles = StyleSheet.create({
         color: '#999',
         marginTop: 4,
     },
-    statusBadge: {
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 12,
+    actions: {
+        flexDirection: 'row',
     },
-    publishedBadge: {
-        backgroundColor: '#4CAF50',
+    editButton: {
+        padding: 8,
+        marginRight: 8,
     },
-    draftBadge: {
-        backgroundColor: '#FFC107',
+    editText: {
+        fontSize: 20,
     },
-    statusText: {
-        color: '#fff',
-        fontSize: 12,
-        fontWeight: '600',
+    deleteButton: {
+        padding: 8,
+    },
+    deleteText: {
+        fontSize: 20,
     },
     fab: {
         position: 'absolute',
