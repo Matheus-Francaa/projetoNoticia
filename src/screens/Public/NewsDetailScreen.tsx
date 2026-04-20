@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet, Keyboard, KeyboardAvoidingView, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '@/src/components/Header';
-import { CustomButton } from '@/src/components/CustomButton';
 import { NavigationAdapter } from '@/src/types';
 
 interface Comment {
@@ -25,24 +25,39 @@ interface NewsDetailScreenProps {
 }
 
 export function NewsDetailScreen({ navigation, news }: NewsDetailScreenProps) {
+    const insets = useSafeAreaInsets();
+    const scrollRef = useRef<ScrollView>(null);
     const [comment, setComment] = useState('');
-    const [comments, setComments] = useState<Comment[]>([
+    const [keyboardHeight, setKeyboardHeight] = useState(0);
+    const [comments] = useState<Comment[]>([
         { id: '1', author: 'João', content: 'Ótima notícia!', date: '2024-01-15' },
         { id: '2', author: 'Maria', content: 'Muito interessante.', date: '2024-01-14' },
     ]);
 
-    const handleAddComment = () => {
+    useEffect(() => {
+        const showListener = Keyboard.addListener('keyboardDidShow', (e) => {
+            setKeyboardHeight(e.endCoordinates.height);
+            // Scroll to bottom when keyboard shows
+            setTimeout(() => {
+                scrollRef.current?.scrollToEnd({ animated: true });
+            }, 100);
+        });
+        const hideListener = Keyboard.addListener('keyboardDidHide', () => {
+            setKeyboardHeight(0);
+        });
+
+        return () => {
+            showListener.remove();
+            hideListener.remove();
+        };
+    }, []);
+
+    const handleSendComment = () => {
         if (comment.trim()) {
-            setComments([
-                ...comments,
-                {
-                    id: Date.now().toString(),
-                    author: 'Você',
-                    content: comment,
-                    date: new Date().toISOString().split('T')[0],
-                },
-            ]);
+            // In a real app, you'd save this to a backend
+            console.log('New comment:', comment);
             setComment('');
+            Keyboard.dismiss();
         }
     };
 
@@ -53,46 +68,87 @@ export function NewsDetailScreen({ navigation, news }: NewsDetailScreenProps) {
                 showBackButton
                 onBackPress={() => navigation.goBack()}
             />
-            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-                <View style={styles.categoryBadge}>
-                    <Text style={styles.categoryText}>{news?.category || 'Geral'}</Text>
-                </View>
-                <Text style={styles.title}>{news?.title || 'Título da Notícia'}</Text>
-                <Text style={styles.subtitle}>{news?.subtitle || 'Subtítulo'}</Text>
-                <View style={styles.meta}>
-                    <Text style={styles.author}>Por {news?.author || 'Autor'}</Text>
-                    <Text style={styles.date}>{news?.date || new Date().toISOString().split('T')[0]}</Text>
-                </View>
-                <Text style={styles.body}>
-                    {news?.content ||
-                        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.'}
-                </Text>
+            <KeyboardAvoidingView
+                style={styles.keyboardView}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={0}
+                enabled
+            >
+                <ScrollView 
+                    ref={scrollRef}
+                    style={styles.content} 
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={[
+                        styles.scrollContent,
+                        { paddingBottom: keyboardHeight > 0 ? keyboardHeight + 20 : 120 }
+                    ]}
+                >
+                    <View style={styles.categoryBadge}>
+                        <Text style={styles.categoryText}>{news?.category || 'Geral'}</Text>
+                    </View>
+                    <Text style={styles.title}>{news?.title || 'Título da Notícia'}</Text>
+                    <Text style={styles.subtitle}>{news?.subtitle || 'Subtítulo'}</Text>
+                    <View style={styles.meta}>
+                        <Text style={styles.author}>Por {news?.author || 'Autor'}</Text>
+                        <Text style={styles.date}>{news?.date || new Date().toISOString().split('T')[0]}</Text>
+                    </View>
+                    <Text style={styles.body}>
+                        {news?.content ||
+                            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.'}
+                    </Text>
 
-                <View style={styles.commentsSection}>
-                    <Text style={styles.commentsTitle}>Comentários ({comments.length})</Text>
-                    {comments.map((c) => (
-                        <View key={c.id} style={styles.commentCard}>
-                            <View style={styles.commentHeader}>
-                                <Text style={styles.commentAuthor}>{c.author}</Text>
-                                <Text style={styles.commentDate}>{c.date}</Text>
+                    <View style={styles.commentsSection}>
+                        <Text style={styles.commentsTitle}>Comentários ({comments.length})</Text>
+                        {comments.map((c) => (
+                            <View key={c.id} style={styles.commentCard}>
+                                <View style={styles.commentHeader}>
+                                    <View style={styles.commentAvatar}>
+                                        <Text style={styles.commentAvatarText}>
+                                            {c.author.charAt(0).toUpperCase()}
+                                        </Text>
+                                    </View>
+                                    <View style={styles.commentInfo}>
+                                        <Text style={styles.commentAuthor}>{c.author}</Text>
+                                        <Text style={styles.commentDate}>{c.date}</Text>
+                                    </View>
+                                </View>
+                                <Text style={styles.commentContent}>{c.content}</Text>
                             </View>
-                            <Text style={styles.commentContent}>{c.content}</Text>
-                        </View>
-                    ))}
+                        ))}
+                    </View>
+                </ScrollView>
 
-                    <View style={styles.addComment}>
-                        <Text style={styles.addCommentTitle}>Adicionar comentário</Text>
+                {/* Comment Input */}
+                <View style={[
+                    styles.commentInputContainer, 
+                    { 
+                        paddingBottom: Math.max(insets.bottom, 8),
+                        transform: [{ translateY: -keyboardHeight / 2 }]
+                    }
+                ]}>
+                    <View style={styles.commentInputRow}>
                         <TextInput
                             style={styles.commentInput}
-                            placeholder="Digite seu comentário..."
+                            placeholder="Escreva um comentário..."
                             value={comment}
                             onChangeText={setComment}
                             multiline
+                            maxLength={500}
+                            blurOnSubmit={false}
                         />
-                        <CustomButton title="Enviar" onPress={handleAddComment} />
+                        <TouchableOpacity 
+                            style={[
+                                styles.sendButton, 
+                                !comment.trim() && styles.sendButtonDisabled
+                            ]}
+                            onPress={handleSendComment}
+                            disabled={!comment.trim()}
+                        >
+                            <Text style={styles.sendButtonText}>➤</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
-            </ScrollView>
+            </KeyboardAvoidingView>
         </View>
     );
 }
@@ -100,10 +156,15 @@ export function NewsDetailScreen({ navigation, news }: NewsDetailScreenProps) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#F5F5F5',
+    },
+    keyboardView: {
+        flex: 1,
     },
     content: {
         flex: 1,
+    },
+    scrollContent: {
         padding: 16,
     },
     categoryBadge: {
@@ -150,7 +211,7 @@ const styles = StyleSheet.create({
     body: {
         fontSize: 16,
         color: '#333',
-        lineHeight: 24,
+        lineHeight: 26,
         marginBottom: 24,
     },
     commentsSection: {
@@ -164,14 +225,31 @@ const styles = StyleSheet.create({
     },
     commentCard: {
         backgroundColor: '#fff',
-        padding: 12,
-        borderRadius: 8,
+        padding: 16,
+        borderRadius: 16,
         marginBottom: 12,
+        elevation: 2,
     },
     commentHeader: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 4,
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    commentAvatar: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: '#E3F2FD',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    commentAvatarText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#2196F3',
+    },
+    commentInfo: {
+        marginLeft: 10,
     },
     commentAuthor: {
         fontSize: 14,
@@ -179,32 +257,48 @@ const styles = StyleSheet.create({
         color: '#333',
     },
     commentDate: {
-        fontSize: 12,
+        fontSize: 11,
         color: '#999',
     },
     commentContent: {
         fontSize: 14,
         color: '#666',
+        lineHeight: 20,
     },
-    addComment: {
-        marginTop: 16,
+    commentInputContainer: {
         backgroundColor: '#fff',
-        padding: 16,
-        borderRadius: 8,
+        paddingTop: 12,
+        paddingHorizontal: 16,
+        borderTopWidth: 1,
+        borderTopColor: '#eee',
     },
-    addCommentTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#333',
-        marginBottom: 12,
+    commentInputRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-end',
     },
     commentInput: {
-        backgroundColor: '#f5f5f5',
-        borderRadius: 8,
-        padding: 12,
+        flex: 1,
+        backgroundColor: '#F5F5F5',
+        borderRadius: 20,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
         fontSize: 14,
-        height: 80,
-        textAlignVertical: 'top',
-        marginBottom: 12,
+        maxHeight: 100,
+        marginRight: 8,
+    },
+    sendButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: '#2196F3',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    sendButtonDisabled: {
+        backgroundColor: '#ccc',
+    },
+    sendButtonText: {
+        fontSize: 18,
+        color: '#fff',
     },
 });

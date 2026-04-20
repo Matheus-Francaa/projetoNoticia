@@ -9,9 +9,6 @@ export default function PublicLayout() {
         >
             <Stack.Screen name="index" />
             <Stack.Screen name="news/[id]" />
-            <Stack.Screen name="login" />
-            <Stack.Screen name="register" />
-            <Stack.Screen name="recovery" />
         </Stack>
     );
 }
