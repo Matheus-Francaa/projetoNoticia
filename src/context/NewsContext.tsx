@@ -1,15 +1,8 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
+import { initializeDatabase } from '../db/init';
+import { newsStorage, type NewsItem } from '../services/newsStorage';
 
-export interface News {
-    id: string;
-    title: string;
-    subtitle: string;
-    content: string;
-    author: string;
-    authorId: string;
-    date: string;
-    category: string;
-    status: 'draft' | 'pending' | 'published' | 'rejected';
+export interface News extends NewsItem {
     comments?: Comment[];
 }
 
@@ -76,40 +69,95 @@ const initialNews: News[] = [
 ];
 
 export function NewsProvider({ children }: NewsProviderProps) {
-    const [news, setNews] = useState<News[]>(initialNews);
+    const [news, setNews] = useState<News[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const addNews = useCallback((newNews: Omit<News, 'id' | 'date' | 'status'>) => {
-        const id = Date.now().toString();
-        const newsItem: News = {
-            ...newNews,
-            id,
-            date: new Date().toISOString().split('T')[0],
-            status: 'pending',
+    // Initialize database and load initial data
+    useEffect(() => {
+        const initialize = async () => {
+            try {
+                await initializeDatabase();
+
+                // Check if we have data in the database
+                const existingNews = await newsStorage.getAllNews();
+
+                if (existingNews.length === 0) {
+                    // Load initial news if database is empty
+                    for (const newsItem of initialNews) {
+                        await newsStorage.addNews({
+                            title: newsItem.title,
+                            subtitle: newsItem.subtitle,
+                            content: newsItem.content,
+                            author: newsItem.author,
+                            authorId: newsItem.authorId,
+                            date: newsItem.date,
+                            category: newsItem.category,
+                            status: newsItem.status,
+                        });
+                    }
+                    // Reload after inserting initial data
+                    const loaded = await newsStorage.getAllNews();
+                    setNews(loaded);
+                } else {
+                    setNews(existingNews);
+                }
+
+            } catch (error) {
+                console.error('Failed to initialize database:', error);
+                // Fallback to initial news in memory if database fails
+                setNews(initialNews);
+            } finally {
+                setIsLoading(false);
+            }
         };
-        setNews((prev) => [newsItem, ...prev]);
+
+        initialize();
     }, []);
 
-    const updateNews = useCallback((id: string, updates: Partial<News>) => {
-        setNews((prev) =>
-            prev.map((n) => (n.id === id ? { ...n, ...updates } : n))
-        );
+    const addNews = useCallback(async (newNews: Omit<News, 'id' | 'date' | 'status'>) => {
+        try {
+            const newsItem = await newsStorage.addNews({
+                ...newNews,
+                status: 'pending',
+                date: new Date().toISOString().split('T')[0],
+            });
+            setNews((prev) => [newsItem, ...prev]);
+        } catch (error) {
+            console.error('Failed to add news:', error);
+        }
     }, []);
 
-    const deleteNews = useCallback((id: string) => {
-        setNews((prev) => prev.filter((n) => n.id !== id));
+    const updateNews = useCallback(async (id: string, updates: Partial<News>) => {
+        try {
+            const success = await newsStorage.updateNews(id, updates);
+            if (success) {
+                setNews((prev) =>
+                    prev.map((n) => (n.id === id ? { ...n, ...updates } : n))
+                );
+            }
+        } catch (error) {
+            console.error('Failed to update news:', error);
+        }
+    }, []);
+
+    const deleteNews = useCallback(async (id: string) => {
+        try {
+            const success = await newsStorage.deleteNews(id);
+            if (success) {
+                setNews((prev) => prev.filter((n) => n.id !== id));
+            }
+        } catch (error) {
+            console.error('Failed to delete news:', error);
+        }
     }, []);
 
     const publishNews = useCallback((id: string) => {
-        setNews((prev) =>
-            prev.map((n) => (n.id === id ? { ...n, status: 'published' as const } : n))
-        );
-    }, []);
+        updateNews(id, { status: 'published' });
+    }, [updateNews]);
 
     const rejectNews = useCallback((id: string) => {
-        setNews((prev) =>
-            prev.map((n) => (n.id === id ? { ...n, status: 'rejected' as const } : n))
-        );
-    }, []);
+        updateNews(id, { status: 'rejected' });
+    }, [updateNews]);
 
     const getNewsById = useCallback(
         (id: string) => news.find((n) => n.id === id),
@@ -143,6 +191,14 @@ export function NewsProvider({ children }: NewsProviderProps) {
         getPendingNews,
         getPublishedNews,
     };
+
+    if (isLoading) {
+        return (
+            <NewsContext.Provider value={value}>
+                {children}
+            </NewsContext.Provider>
+        );
+    }
 
     return <NewsContext.Provider value={value}>{children}</NewsContext.Provider>;
 }

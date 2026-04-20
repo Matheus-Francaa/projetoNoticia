@@ -1,108 +1,181 @@
-# 📰 Portal de Notícias - React Native com Expo
+# 📰 Portal de Notícias com Persistência Local
 
-Uma aplicação React Native completa desenvolvida com Expo para gerenciamento e leitura de notícias com diferentes níveis de acesso de usuários.
+Aplicação React Native com Expo para gerenciamento de notícias com **CRUD completo** e persistência local usando **SQLite + Drizzle ORM**.
 
-## 🚀 Funcionalidades
+## 🚀 Como Rodar
 
-### 👤 Público (Sem Login)
-- **Home - Lista de Notícias**: Visualizar todas as notícias publicadas
-- **Busca por Tag**: Filtrar notícias por tags
-- **Busca por UF**: Filtrar notícias por estado
-- **Detalhe da Notícia**: Ver conteúdo completo e comentários
-- **Cadastro**: Criar uma nova conta
-- **Login**: Acessar como diferentes perfis
-- **Recuperação de Acesso**: Recuperar acesso via email
-
-### ✍️ Autor
-- **Meu Perfil**: Editar informações pessoais
-- **Minhas Notícias**: Visualizar, editar e deletar notícias criadas
-- **Nova Notícia**: Criar e publicar novas notícias
-- **Comentar**: Participar da comunidade com comentários
-
-### 👁️ Leitor
-- **Meu Perfil**: Editar informações e preferências
-- **Ler Notícias**: Acessar todas as notícias publicadas
-- **Comentar**: Adicionar comentários nas notícias
-
-### 📋 Editor
-- **Meu Perfil**: Editar informações pessoais
-- **Painel de Publicação**: Gerenciar todas as notícias
-
-### 👑 Super Admin
-- **Dashboard Completo**: CRUD de Cidades, Tags, Perfis, UF, Notícias, Usuários e Comentários
-
-## 📋 Pré-requisitos
-
-- Node.js 16 ou superior
-- npm
-- Expo Go (opcional, para celular)
-
-## 🛠️ Instalação
-
+### 1. Instalar Dependências
 ```bash
-cd projetoNoticia
 npm install
+```
+
+### 2. Iniciar a Aplicação
+```bash
 npm start
 ```
 
-## 💻 Como Usar
+### 3. Escolher Plataforma
+- Pressione `w` para web
+- Pressione `a` para Android  
+- Pressione `i` para iOS
 
-Pressione:
-- `w` para web
-- `a` para Android
-- `i` para iOS
+Na tela de Login, escolha um dos 3 perfis (Público, Autor, Leitor, Editor ou Admin).
 
-Na tela de Login, escolha um dos 3 perfis!
+## 💾 CRUD de Notícias
 
-## 📁 Estrutura
+### Usar em Qualquer Componente
+
+```typescript
+import { useNews } from '@/src/context/NewsContext';
+
+export function MeuComponente() {
+  const { news, addNews, updateNews, deleteNews } = useNews();
+}
+```
+
+### Exemplo: Listar, Criar, Editar e Deletar
+
+```typescript
+import { useNews } from '@/src/context/NewsContext';
+import { FlatList, Button, Text, View } from 'react-native';
+
+export function NewsScreen() {
+  const { news, addNews, updateNews, deleteNews } = useNews();
+
+  // Criar notícia
+  const criar = async () => {
+    await addNews({
+      title: 'Meu Título',
+      subtitle: 'Subtítulo',
+      content: 'Conteúdo da notícia...',
+      author: 'João Silva',
+      authorId: 'author1',
+      date: '2024-04-20',
+      category: 'Tecnologia',
+      status: 'draft'
+    });
+  };
+
+  // Atualizar notícia
+  const atualizar = async (id: string) => {
+    await updateNews(id, { status: 'published' });
+  };
+
+  // Deletar notícia
+  const deletar = async (id: string) => {
+    await deleteNews(id);
+  };
+
+  return (
+    <View style={{ flex: 1 }}>
+      <Button title="Nova Notícia" onPress={criar} />
+      
+      <FlatList
+        data={news}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={{ padding: 12, borderBottomWidth: 1 }}>
+            <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{item.title}</Text>
+            <Text>{item.author}</Text>
+            <Button title="Editar" onPress={() => atualizar(item.id)} />
+            <Button title="Deletar" onPress={() => deletar(item.id)} color="red" />
+          </View>
+        )}
+      />
+    </View>
+  );
+}
+```
+
+### Operações Disponíveis
+
+**CREATE (Criar):**
+```typescript
+await addNews({ title, subtitle, content, author, authorId, date, category, status })
+```
+
+**READ (Ler):**
+```typescript
+news                          // Todas as notícias
+getNewsById(id)              // Uma específica
+getNewsByAuthor(authorId)    // Notícias de um autor
+getPendingNews()             // Notícias pendentes
+getPublishedNews()           // Notícias publicadas
+```
+
+**UPDATE (Atualizar):**
+```typescript
+await updateNews(id, { status: 'published' })
+await publishNews(id)         // Atalho: muda status para 'published'
+await rejectNews(id)          // Atalho: muda status para 'rejected'
+```
+
+**DELETE (Deletar):**
+```typescript
+await deleteNews(id)
+```
+
+## 🗄️ Banco de Dados
+
+- **SQLite** com expo-sqlite (persistência local)
+- **Drizzle ORM** para queries type-safe
+- **Tabela**: `news` com 12 campos
+- **Dados Demo**: 3 notícias iniciais (carregadas automaticamente na primeira vez)
+
+## 📁 Arquivos Criados
 
 ```
-src/
-├── screens/         (Telas por perfil)
-├── navigation/      (Navegação)
-├── context/         (Autenticação)
-├── components/      (Componentes)
-└── utils/          (Dados mock)
+src/db/
+├── schema.ts          ← Schema Drizzle (definição da tabela)
+└── init.ts            ← Inicialização do SQLite
+
+src/services/
+└── newsStorage.ts     ← Serviço CRUD (operações de banco)
+
+src/context/
+└── NewsContext.tsx    ← React Context com persistência (hook useNews)
 ```
 
-## 🎨 Estilos
+## ✨ Características
 
-- Ícones: Emojis
-- Cores: Azul (#2196F3), Laranja, Roxo
+- ✅ **Persistência Automática** - Dados salvam em SQLite
+- ✅ **Type-Safe** - TypeScript + Drizzle ORM
+- ✅ **Pronto para Usar** - Nenhuma configuração extra necessária
+- ✅ **Sincronizado** - State React sincronizado com banco
+- ✅ **Dados Demo** - 3 notícias iniciais quando banco está vazio
 
-## 📝 Notas
+## 🎯 Funcionalidades por Perfil
 
-- Dados mock (sem backend real)
-- Autenticação simulada
-- Para fins educacionais
+### 👤 Público
+- Ver notícias publicadas
+- Cadastro e login
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### ✍️ Autor  
+- Criar, editar e deletar próprias notícias
+- Comentar em notícias
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### 👁️ Leitor
+- Ler notícias publicadas
+- Comentar
 
-## Get a fresh project
+### 📋 Editor
+- Gerenciar publicação de notícias
 
-When you're ready, run:
+### 👑 Admin
+- Acesso completo ao sistema
 
+## 📋 Pré-requisitos
+
+- Node.js 16+
+- npm
+- Expo Go (opcional, para celular)
+
+## ✅ Pronto para Usar
+
+Código compilado sem erros:
 ```bash
-npm run reset-project
+npm run lint
+# ✅ PASSOU
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Agora é só usar!
